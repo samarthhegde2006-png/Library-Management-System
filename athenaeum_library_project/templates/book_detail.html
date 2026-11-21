@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}{{ book.title }} by {{ book.author }} | The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 44px 0 100px;">
+    <div class="container">
+      <nav style="font-size:0.82rem; color:var(--text-muted); margin-bottom:22px;">
+        <a href="{% url 'library:home' %}">Home</a> /
+        <a href="{% url 'library:catalog' %}?genre={{ book.genre.slug }}">{{ book.genre.name }}</a> /
+        <strong>{{ book.title }}</strong>
+      </nav>
+
+      <div class="fk-detail-grid" style="margin-bottom:68px;">
+        <div class="fk-gallery-sticky fade-scale in-view">
+          <div class="fk-thumb-col">
+            <img src="{{ book.get_cover }}" class="fk-thumb active" onmouseover="swapBookGallery(this, '{{ book.get_cover }}', '{{ book.title|escapejs }} — Cover')" onclick="swapBookGallery(this, '{{ book.get_cover }}', '{{ book.title|escapejs }} — Cover')" />
+            {% for img in book.gallery_images.all %}
+              <img src="{{ img.image_url }}" class="fk-thumb" onmouseover="swapBookGallery(this, '{{ img.image_url }}', '{{ img.caption|escapejs }}')" onclick="swapBookGallery(this, '{{ img.image_url }}', '{{ img.caption|escapejs }}')" />
+            {% endfor %}
+          </div>
+
+          <div class="glass-card" style="padding:18px;">
+            <div style="border-radius:18px; overflow:hidden; background:#231B18; margin-bottom:10px;">
+              <img id="fk-main-image" src="{{ book.get_cover }}" alt="{{ book.title }}" style="width:100%; height:410px; object-fit:cover; transition:opacity 0.2s ease;" />
+            </div>
+            <p id="fk-image-caption" style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-bottom:14px;">{{ book.title }} — {{ book.item_format }}</p>
+
+            {% if user.is_authenticated %}
+              {% if book.available_copies > 0 %}
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                  <button type="submit" form="borrow-form" class="pill-copper-btn" style="padding:13px;">📚 Add to Bag</button>
+                  <button type="submit" form="borrow-form" name="borrow_now" value="1" class="pill-primary-btn" style="padding:13px;">⚡ Borrow Now</button>
+                </div>
+              {% else %}
+                <button type="button" class="pill-badge-btn" disabled style="width:100%; padding:13px;">Currently Checked Out</button>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="pill-primary-btn" style="width:100%; padding:13px;">Sign In to Borrow Volume</a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="slide-up in-view">
+          <span class="eyebrow-pill">{{ book.genre.name }} · {{ book.item_format }}</span>
+          <h1 style="font-size:clamp(2rem, 3.6vw, 2.9rem); margin-bottom:8px;">{{ book.title }}</h1>
+          <p style="font-family:var(--font-serif); font-style:italic; font-size:1.3rem; color:var(--accent-warm); margin-bottom:16px;">by {{ book.author }}</p>
+
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; font-size:0.86rem;">
+            <span style="padding:4px 11px; border-radius:999px; background:var(--burgundy); color:#FBF7F0; font-weight:700;">{{ book.average_rating }} ★</span>
+            <span>{{ reviews.count }} Reader Reviews</span>
+            <span style="color:var(--sage); font-weight:700;">● {{ book.available_copies }} of {{ book.total_copies }} Copies Available</span>
+          </div>
+
+          <form id="borrow-form" method="post" action="{% url 'library:add_to_bag' book.id %}" class="glass-card" style="padding:22px; margin-bottom:18px;">
+            {% csrf_token %}
+            <div style="margin-bottom:12px;">
+              <label class="form-label">Select Binding / Edition Copy</label>
+              <select name="selected_edition" class="aether-select">
+                {% for ed in book.parsed_editions %}<option value="{{ ed.name }}">{{ ed.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Bookmark / Study Note (Optional)</label>
+              <input type="text" name="reading_note" class="aether-input" placeholder="e.g. Research reference for literature seminar" />
+            </div>
+          </form>
+
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'library:toggle_reading_list' book.id %}" style="margin-bottom:20px;">
+              {% csrf_token %}
+              <button type="submit" class="pill-badge-btn" style="width:100%; padding:11px;">
+                {% if book.id in saved_book_ids %}♥ Saved in Reading List{% else %}♡ Add to Reading List{% endif %}
+              </button>
+            </form>
+          {% endif %}
+
+          <div class="glass-card" style="padding:24px;">
+            <h3 style="font-size:1.35rem; margin-bottom:10px;">Synopsis &amp; Bibliographic Metadata</h3>
+            <p style="color:var(--text-muted); margin-bottom:18px; line-height:1.7;">{{ book.synopsis }}</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.88rem;">
+              <div><span style="color:var(--text-muted); display:block;">ISBN-13</span><strong>{{ book.isbn }}</strong></div>
+              <div><span style="color:var(--text-muted); display:block;">Publisher</span><strong>{{ book.publisher }}</strong></div>
+              <div><span style="color:var(--text-muted); display:block;">First Published</span><strong>{{ book.published_year }}</strong></div>
+              <div><span style="color:var(--text-muted); display:block;">Length</span><strong>{{ book.pages }} Pages</strong></div>
+              <div><span style="color:var(--text-muted); display:block;">Shelf Location</span><strong>{{ book.shelf_location }}</strong></div>
+              <div><span style="color:var(--text-muted); display:block;">Audience</span><strong>{{ book.audience }}</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reader Reviews -->
+      <section class="slide-up" style="margin-bottom:64px;">
+        <h2 style="font-size:2rem; margin-bottom:20px;">Reader Reviews &amp; Notes</h2>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            {% for rev in reviews %}
+              <div class="glass-card" style="padding:20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                  <strong>{{ rev.headline }}</strong>
+                  <span>{{ rev.rating }} ★</span>
+                </div>
+                <p style="font-size:0.88rem; color:var(--text-muted);">{{ rev.comment }}</p>
+                <small style="color:var(--accent-warm);">— {{ rev.user.member_profile.full_name|default:rev.user.username }}</small>
+              </div>
+            {% empty %}
+              <div class="glass-card" style="padding:24px;"><p>No reader reviews yet. Share your thoughts below!</p></div>
+            {% endfor %}
+          </div>
+
+          <div class="glass-card" style="padding:24px;">
+            <h3 style="margin-bottom:12px;">Write a Reader Review</h3>
+            {% if user.is_authenticated %}
+              <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+                {% csrf_token %}
+                {{ review_form.as_p }}
+                <button type="submit" class="pill-primary-btn">Post Review</button>
+              </form>
+              <script>document.querySelectorAll('form input, form select, form textarea').forEach(e=>e.classList.add('aether-input'));</script>
+            {% else %}
+              <a href="{% url 'accounts:login' %}" class="pill-primary-btn">Sign In to Review</a>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      {% if related_books %}
+        <section class="slide-up">
+          <h2 style="font-size:2rem; margin-bottom:22px;">Related Volumes in {{ book.genre.name }}</h2>
+          <div class="book-grid">
+            {% for rel in related_books %}
+              {% include '_book_card.html' with book=rel %}
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    </div>
+  </main>
+{% endblock %}

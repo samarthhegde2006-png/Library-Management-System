@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Track Borrow Slip — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 56px 0 100px;"><div class="container" style="max-width:860px;">
+    <div style="text-align:center; margin-bottom:28px;">
+      <span class="eyebrow-pill">CIRCULATION TELEMETRY</span>
+      <h1 style="font-size:2.8rem;">Track Your Borrow Slip</h1>
+    </div>
+    <div class="glass-card" style="padding:28px; margin-bottom:24px;">
+      <form method="get" style="display:flex; gap:12px;">
+        <input type="text" name="slip_number" value="{{ query_slip }}" class="aether-input" placeholder="Enter Slip ID (e.g. ATH-LIB-XXXXXX)" required />
+        <button type="submit" class="pill-primary-btn" style="padding:12px 24px;">Track</button>
+      </form>
+      {% if user_slips %}
+        <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;">
+          {% for s in user_slips %}<a href="?slip_number={{ s.slip_number }}" class="pill-badge-btn">{{ s.slip_number }} ({{ s.status }})</a>{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if tracked_slip %}
+      <div class="glass-card" style="padding:30px;">
+        <h2>Slip {{ tracked_slip.slip_number }} — <span style="color:var(--accent-warm);">{{ tracked_slip.status }}</span></h2>
+        <p style="margin:8px 0 16px;">Issued: {{ tracked_slip.issued_at|date:"M d, Y" }} · Due Date: <strong>{{ tracked_slip.due_date|date:"M d, Y" }}</strong></p>
+        {% for i in tracked_slip.items.all %}
+          <p>• <strong>{{ i.book_title }}</strong> by {{ i.author_name }} ({{ i.selected_edition }})</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div></main>
+{% endblock %}

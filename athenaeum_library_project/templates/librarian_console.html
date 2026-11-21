@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Librarian Command Console — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 48px 0 100px;"><div class="container">
+    <div class="glass-card" style="padding:30px; margin-bottom:28px;">
+      <span class="eyebrow-pill">HEAD LIBRARIAN CONSOLE</span>
+      <h1 style="font-size:2.4rem; margin-bottom:20px;">Welcome, Librarian {{ user.first_name|default:user.username }}</h1>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+        <div class="glass-card" style="padding:18px;"><span class="form-label">Total Catalog Titles</span><div style="font-size:2rem; font-weight:700;">{{ books.count }}</div></div>
+        <div class="glass-card" style="padding:18px;"><span class="form-label">Available Copies</span><div style="font-size:2rem; font-weight:700;">{{ available_copies }} / {{ total_copies }}</div></div>
+        <div class="glass-card" style="padding:18px;"><span class="form-label">Borrow Slips</span><div style="font-size:2rem; font-weight:700;">{{ slips.count }}</div></div>
+        <div class="glass-card" style="padding:18px;"><span class="form-label">Library Members</span><div style="font-size:2rem; font-weight:700;">{{ members.count }}</div></div>
+      </div>
+    </div>
+
+    <!-- Add New Book / Comic / Manga -->
+    <section class="glass-card" style="padding:30px; margin-bottom:28px;">
+      <h2 style="font-size:1.65rem; margin-bottom:16px;">Catalogue New Book, Comic, or Manga</h2>
+      <form method="post" action="{% url 'library:librarian_save_book' %}" enctype="multipart/form-data" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px; margin-bottom:24px;">
+        {% csrf_token %}
+        <input type="text" name="title" class="aether-input" placeholder="Book / Comic Title *" required />
+        <input type="text" name="author" class="aether-input" placeholder="Author / Creator *" required />
+        <input type="text" name="isbn" class="aether-input" placeholder="ISBN-13 *" required />
+        <select name="genre_id" class="aether-select">{% for g in genres %}<option value="{{ g.id }}">{{ g.name }}</option>{% endfor %}</select>
+        <select name="item_format" class="aether-select">{% for val, lbl in format_choices %}<option value="{{ val }}">{{ lbl }}</option>{% endfor %}</select>
+        <select name="audience" class="aether-select">{% for val, lbl in audience_choices %}<option value="{{ val }}">{{ lbl }}</option>{% endfor %}</select>
+        <input type="number" name="total_copies" class="aether-input" value="5" placeholder="Total Copies" required />
+        <input type="text" name="shelf_location" class="aether-input" value="Wing A · Shelf 01" />
+        <input type="url" name="cover_image_url" class="aether-input" placeholder="Cover Image URL *" required />
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem;"><input type="checkbox" name="is_comic_or_manga" value="1" /> Comic / Manga</label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem;"><input type="checkbox" name="is_rare_vault" value="1" /> Rare Vault</label>
+        <input type="text" name="synopsis" class="aether-input" style="grid-column:1/-1;" placeholder="Synopsis *" required />
+        <button type="submit" class="pill-primary-btn">+ Add to Catalog</button>
+      </form>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+          <thead><tr style="border-bottom:1px solid var(--card-border); text-align:left;"><th style="padding:10px;">Cover</th><th>Title &amp; Author</th><th>Format</th><th>Copies</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for b in books %}
+              <tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:10px;"><img src="{{ b.get_cover }}" style="width:40px; height:52px; border-radius:8px; object-fit:cover;" /></td>
+                <td><strong>{{ b.title }}</strong><br><small>{{ b.author }}</small></td>
+                <td>{{ b.item_format }}</td>
+                <td>{{ b.available_copies }} / {{ b.total_copies }}</td>
+                <td><form method="post" action="{% url 'library:librarian_delete_book' b.id %}">{% csrf_token %}<button type="submit" class="pill-badge-btn">Remove</button></form></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Active Borrow Slips -->
+    <section class="glass-card" style="padding:28px;">
+      <h2 style="font-size:1.6rem; margin-bottom:14px;">Member Borrow Slips &amp; Returns</h2>
+      {% for s in slips %}
+        <div style="padding:14px; border-radius:16px; background:rgba(74,37,37,0.06); margin-bottom:10px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <strong>{{ s.slip_number }}</strong> · {{ s.member_name }} · Due: {{ s.due_date|date:"M d, Y" }} (<strong>{{ s.status }}</strong>)
+          </div>
+          <form method="post" action="{% url 'library:librarian_update_slip_status' s.id %}" style="display:flex; gap:8px;">
+            {% csrf_token %}
+            <select name="status" class="aether-select" style="padding:6px 10px;">
+              <option value="Checked Out" {% if s.status == 'Checked Out' %}selected{% endif %}>Checked Out</option>
+              <option value="Returned" {% if s.status == 'Returned' %}selected{% endif %}>Returned</option>
+              <option value="Overdue" {% if s.status == 'Overdue' %}selected{% endif %}>Overdue</option>
+            </select>
+            <button type="submit" class="pill-primary-btn">Update</button>
+          </form>
+        </div>
+      {% empty %}<p>No borrow slips issued yet.</p>{% endfor %}
+    </section>
+  </div></main>
+{% endblock %}

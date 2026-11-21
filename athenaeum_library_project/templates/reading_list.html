@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Saved Reading List — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 56px 0 100px;"><div class="container">
+    <h1 style="font-size:2.6rem; margin-bottom:24px;">Your Saved Reading List</h1>
+    {% if items %}
+      <div class="book-grid">
+        {% for item in items %}
+          <article class="glass-card book-card">
+            <div><div class="book-cover-box"><img src="{{ item.book.get_cover }}" /></div><h3>{{ item.book.title }}</h3><p style="font-size:0.84rem; color:var(--text-muted);">by {{ item.book.author }}</p></div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+              <form method="post" action="{% url 'library:move_saved_to_bag' item.id %}">{% csrf_token %}<button type="submit" class="pill-primary-btn" style="width:100%;">Move to Book Bag</button></form>
+              <form method="post" action="{% url 'library:toggle_reading_list' item.book.id %}">{% csrf_token %}<button type="submit" class="pill-badge-btn" style="width:100%;">Remove</button></form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="glass-card" style="padding:56px; text-align:center;"><h2>No Saved Books Yet</h2><a href="{% url 'library:catalog' %}?genre=all" class="pill-primary-btn" style="margin-top:14px;">Explore Library</a></div>
+    {% endif %}
+  </div></main>
+{% endblock %}

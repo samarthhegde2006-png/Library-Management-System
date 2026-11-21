@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Library Catalog — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 52px 0 100px;">
+    <div class="container">
+      <div class="slide-down in-view" style="margin-bottom:32px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px;">
+        <div>
+          <span class="eyebrow-pill">COMPLETE ARCHIVAL INDEX</span>
+          <h1 style="font-size: clamp(2.2rem, 4vw, 3.3rem);">Library Catalog</h1>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="{% url 'library:catalog' %}?genre=all" class="pill-primary-btn">All Genres</a>
+          <a href="{% url 'library:catalog' %}?genre=comics-graphic-novels" class="pill-badge-btn">Comics</a>
+          <a href="{% url 'library:catalog' %}?genre=manga-japanese-sequential-art" class="pill-badge-btn">Manga</a>
+          <a href="{% url 'library:catalog' %}?audience=Kids" class="pill-badge-btn">Kids</a>
+          <a href="{% url 'library:catalog' %}?available=1" class="pill-badge-btn">Available Now</a>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 280px 1fr; gap:28px; align-items:start;">
+        <aside class="glass-card slide-up in-view" style="padding:22px;">
+          <form method="get" action="{% url 'library:catalog' %}" style="display:flex; flex-direction:column; gap:13px;">
+            <div><label class="form-label">Search Title, Author, ISBN</label><input type="text" name="q" value="{{ filters.q }}" class="aether-input" placeholder="1984, Watchmen, Berserk..." /></div>
+            <div>
+              <label class="form-label">Wing / Genre</label>
+              <select name="genre" class="aether-select">
+                <option value="all" {% if filters.genre == 'all' %}selected{% endif %}>All Genres (Show All Books)</option>
+                {% for g in genres %}<option value="{{ g.slug }}" {% if filters.genre == g.slug %}selected{% endif %}>{{ g.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Edition Format</label>
+              <select name="format" class="aether-select">
+                <option value="all">All Formats</option>
+                {% for val, lbl in format_choices %}<option value="{{ val }}" {% if filters.format == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Reader Age Group</label>
+              <select name="audience" class="aether-select">
+                <option value="all">All Readers</option>
+                {% for val, lbl in audience_choices %}<option value="{{ val }}" {% if filters.audience == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+              </select>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem;">
+              <input type="checkbox" name="available" value="1" {% if filters.available == '1' %}checked{% endif %} /> Available copies only
+            </label>
+            <button type="submit" class="pill-primary-btn" style="width:100%;">Filter Shelves</button>
+            <a href="{% url 'library:catalog' %}?genre=all" class="pill-badge-btn" style="width:100%;">Reset</a>
+          </form>
+        </aside>
+
+        <div>
+          <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:16px;">
+            Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} volumes
+          </p>
+          <div class="book-grid">
+            {% for book in page_obj %}
+              {% include '_book_card.html' with book=book %}
+            {% empty %}
+              <div class="glass-card" style="padding:40px; grid-column:1/-1; text-align:center;"><h3>No volumes matched your search criteria.</h3></div>
+            {% endfor %}
+          </div>
+
+          {% if page_obj.has_other_pages %}
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:40px;">
+              {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&genre={{ filters.genre }}&format={{ filters.format }}&audience={{ filters.audience }}" class="pill-badge-btn">← Prev</a>{% endif %}
+              <span class="pill-primary-btn">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&genre={{ filters.genre }}&format={{ filters.format }}&audience={{ filters.audience }}" class="pill-badge-btn">Next →</a>{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+  <style>@media(max-width:900px){ main .container > div:nth-child(2){ grid-template-columns:1fr !important; } }</style>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Rare Archives &amp; Collector Reading Room — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 56px 0 110px; background: radial-gradient(circle at 18% 18%, rgba(74, 37, 37, 0.22), transparent 45%), var(--page-bg);">
+    <div class="container">
+      <div class="slide-down in-view" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:20px; margin-bottom:44px; padding-bottom:22px; border-bottom:1px solid var(--card-border);">
+        <div>
+          <span class="eyebrow-pill">SPECIAL COLLECTIONS · RESTRICTED ARCHIVE</span>
+          <h1 style="font-size: clamp(2.4rem, 4.8vw, 4rem);">Rare Archives &amp; Deluxe Editions</h1>
+          <p style="color:var(--text-muted); max-width:640px;">First editions, hardcover manga omnibuses, and silent reading room study reservations.</p>
+        </div>
+        <a href="{% url 'library:home' %}" class="pill-badge-btn" style="padding:12px 22px;">← Exit Rare Archives</a>
+      </div>
+
+      <section style="margin-bottom:64px;">
+        <h2 style="font-size:2.2rem; margin-bottom:22px;">Rare Vault &amp; First Editions</h2>
+        <div class="book-grid">
+          {% for book in rare_books %}
+            {% include '_book_card.html' with book=book %}
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- Custom Reading Room & Binding Reservation Studio -->
+      <section class="glass-card slide-up" style="padding:36px;">
+        <div style="text-align:center; max-width:660px; margin:0 auto 28px;">
+          <span class="eyebrow-pill">READING ROOM CONCIERGE</span>
+          <h2 style="font-size:2.2rem;">Reserve an Archival Binding &amp; Silent Study Desk</h2>
+          <p style="color:var(--text-muted);">Choose any volume, select your preferred archival binding edition, and reserve a private study carrel.</p>
+        </div>
+
+        <form method="post" action="{% url 'library:reserve_custom_bundle' %}" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
+          {% csrf_token %}
+          <div>
+            <label class="form-label">Select Volume</label>
+            <select name="book_id" class="aether-select">
+              {% for b in all_books %}<option value="{{ b.id }}">{{ b.title }} — {{ b.author }}</option>{% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Binding Theme</label>
+            <select name="binding_theme" class="aether-select">
+              <option value="Burgundy Archival Leather">Burgundy Archival Leather</option>
+              <option value="Terracotta Collector Slipcase">Terracotta Collector Slipcase</option>
+              <option value="Sage Linen Hardcover">Sage Linen Hardcover</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Reading Room Desk</label>
+            <select name="study_room" class="aether-select">
+              <option value="Grand Reading Hall · Desk 04">Grand Reading Hall · Desk 04</option>
+              <option value="Manga & Graphic Lounge · Booth 02">Manga &amp; Graphic Lounge · Booth 02</option>
+              <option value="Home Courier Dispatch">Home Courier Dispatch</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Research / Bookmark Note</label>
+            <input type="text" name="reading_note" class="aether-input" placeholder="Optional note..." />
+          </div>
+          <div style="grid-column:1/-1; text-align:center; margin-top:8px;">
+            <button type="submit" class="pill-primary-btn" style="padding:14px 32px;">+ Add Archival Reservation to Book Bag</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+{% endblock %}

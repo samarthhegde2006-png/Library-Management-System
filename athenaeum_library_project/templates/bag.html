@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Book Bag — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 56px 0 100px;"><div class="container">
+    <h1 style="font-size:2.6rem; margin-bottom:24px;">Your Book Bag</h1>
+    {% if items %}
+      <div style="display:grid; grid-template-columns: 1.4fr 0.8fr; gap:28px; align-items:start;">
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          {% for item in items %}
+            <div class="glass-card" style="padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+              <div style="display:flex; gap:16px; align-items:center;">
+                <img src="{{ item.book.get_cover }}" style="width:74px; height:96px; border-radius:12px; object-fit:cover;" />
+                <div>
+                  <h3 style="font-size:1.3rem;">{{ item.book.title }}</h3>
+                  <p style="font-size:0.84rem; color:var(--text-muted);">by {{ item.book.author }} · Edition: <strong>{{ item.selected_edition }}</strong></p>
+                  {% if item.reading_note %}<small style="color:var(--accent-warm);">{{ item.reading_note }}</small>{% endif %}
+                </div>
+              </div>
+              <form method="post" action="{% url 'library:remove_from_bag' item.id %}">{% csrf_token %}<button type="submit" class="pill-badge-btn">Remove</button></form>
+            </div>
+          {% endfor %}
+        </div>
+        <aside class="glass-card" style="padding:26px;">
+          <h2 style="margin-bottom:12px;">Borrow Summary</h2>
+          <p style="margin-bottom:8px;">Total Books Selected: <strong>{{ bag.total_books }}</strong></p>
+          <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:20px;">Standard borrowing period is 14 or 28 days with zero membership fee.</p>
+          <a href="{% url 'circulation:issue_books' %}" class="pill-primary-btn" style="width:100%; padding:14px;">Proceed to Issue Borrow Slip →</a>
+        </aside>
+      </div>
+    {% else %}
+      <div class="glass-card" style="padding:56px; text-align:center;">
+        <h2>Your Book Bag is Empty</h2>
+        <a href="{% url 'library:catalog' %}?genre=all" class="pill-primary-btn" style="margin-top:14px;">Browse Books &amp; Comics</a>
+      </div>
+    {% endif %}
+  </div></main>
+{% endblock %}

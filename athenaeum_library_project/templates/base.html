@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}THE ATHENAEUM — Modern Editorial Library &amp; Comic Archive{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- UNIFIED FLOATING LIQUID GLASS NAVBAR -->
+  <header class="liquid-nav-wrapper" id="liquid-nav-wrapper">
+    <nav class="liquid-glass-nav" aria-label="Primary Navigation">
+      <a href="{% url 'library:home' %}" class="nav-brand">
+        <span class="brand-emblem">❦</span>
+        <span>ATHENAEUM</span>
+      </a>
+
+      <ul class="nav-links" id="primary-nav-menu">
+        <li><a href="{% url 'library:home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+        <li><a href="{% url 'library:catalog' %}?genre=all" class="{% if request.resolver_match.url_name == 'catalog' %}active{% endif %}">Catalog</a></li>
+        <li><a href="{% url 'library:home' %}#genres">Genres</a></li>
+
+        <li class="nav-dropdown" id="nav-more-dropdown">
+          <button type="button" class="nav-dropdown-trigger {% if request.resolver_match.url_name in 'about,track_borrow,help_desk' %}active{% endif %}" onclick="toggleMoreMenu(event)">
+            More <span style="font-size:0.7rem;">▾</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="{% url 'circulation:track_borrow' %}"><span>⌖</span> Track Borrow Slip</a>
+            <a href="{% url 'library:about' %}"><span>❦</span> About Library</a>
+            <a href="{% url 'library:help_desk' %}"><span>✉</span> Librarian Help Desk</a>
+          </div>
+        </li>
+
+        {% if user.is_authenticated %}
+          <li>
+            <a href="{% url 'library:rare_archives' %}" style="background:rgba(184,107,67,0.16); color:var(--accent-warm); font-weight:700;">
+              ✦ Rare Archives
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <div class="nav-actions">
+        <button type="button" id="theme-toggle-btn" class="pill-badge-btn nav-compact-btn">☾ Dark</button>
+
+        {% if user.is_authenticated %}
+          <a href="{% url 'library:reading_list' %}" class="pill-badge-btn nav-compact-btn" title="Reading List">
+            ♡ <span class="count-pill">{{ nav_saved_count }}</span>
+          </a>
+          <a href="{% url 'library:bag' %}" class="pill-badge-btn nav-compact-btn" title="Book Bag">
+            📚 <span class="count-pill">{{ nav_bag_count }}</span>
+          </a>
+          {% if user.is_staff %}
+            <a href="{% url 'library:librarian_console' %}" class="pill-copper-btn nav-compact-btn">Librarian</a>
+          {% endif %}
+          <a href="{% url 'accounts:dashboard' %}" class="pill-badge-btn nav-compact-btn">
+            👤 {{ user.first_name|default:user.username }}
+          </a>
+          <form method="post" action="{% url 'accounts:logout' %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="pill-primary-btn nav-compact-btn">Logout</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="pill-badge-btn nav-compact-btn">Sign In</a>
+          <a href="{% url 'accounts:register' %}" class="pill-primary-btn nav-compact-btn">Join Library</a>
+        {% endif %}
+
+        <button type="button" class="hamburger-btn" id="mobile-hamburger" aria-label="Menu">☰</button>
+      </div>
+    </nav>
+  </header>
+
+  {% if messages %}
+    <div class="toast-stack" role="status">
+      {% for message in messages %}
+        <div class="aether-toast">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+
+  <!-- EDITORIAL FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="{% url 'library:home' %}" class="nav-brand" style="color:#FBF7F0; margin-bottom:14px;">
+            <span class="brand-emblem">❦</span>
+            <span>THE ATHENAEUM</span>
+          </a>
+          <p style="font-family:var(--font-serif); font-style:italic; font-size:1.15rem; color:#D48C64; margin-bottom:10px;">
+            Where Stories &amp; Knowledge Endure.
+          </p>
+          <p style="font-size:0.86rem; max-width:300px;">
+            Curated world literature, deluxe comics, Japanese manga, scientific monographs, and rare first editions.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="color:#FBF7F0; font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:14px;">Library Wings</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:9px; font-size:0.86rem;">
+            <li><a href="{% url 'library:catalog' %}?genre=all">All Genres &amp; Books</a></li>
+            {% for g in nav_genres %}
+              <li><a href="{% url 'library:catalog' %}?genre={{ g.slug }}">{{ g.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color:#FBF7F0; font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:14px;">Reader Services</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:9px; font-size:0.86rem;">
+            <li><a href="{% url 'circulation:track_borrow' %}">Track Borrow Slip</a></li>
+            <li><a href="{% url 'library:about' %}">About The Athenaeum</a></li>
+            <li><a href="{% url 'library:help_desk' %}">Librarian Help Desk</a></li>
+            <li><a href="{% if user.is_authenticated %}{% url 'library:rare_archives' %}{% else %}{% url 'accounts:login' %}{% endif %}">Rare Archives Vault</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color:#FBF7F0; font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:14px;">Reading Room Hours</h4>
+          <p style="font-size:0.84rem; margin-bottom:10px;">Mon – Sat: 8:00 AM – 10:00 PM</p>
+          <p style="font-size:0.84rem; color:#D48C64;">support@athenaeumlibrary.org</p>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid rgba(212,140,100,0.22); padding-top:22px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; font-size:0.84rem;">
+        <span>© 2026 The Athenaeum Library System. All rights reserved.</span>
+        <span style="color:#FBF7F0; font-weight:600;">
+          Designed &amp; Built by <span style="color:#D48C64; text-decoration:underline;">Tanush Muddapur</span>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

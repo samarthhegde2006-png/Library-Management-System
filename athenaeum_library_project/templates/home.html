@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <!-- HERO SECTION -->
+  <section style="padding: 56px 0 92px; background: radial-gradient(circle at 18% 20%, rgba(184, 107, 67, 0.16), transparent 45%), var(--page-bg);">
+    <div class="container">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:44px; align-items:center;">
+        <div>
+          <span class="eyebrow-pill slide-down in-view">THE ATHENAEUM · DIGITAL &amp; ARCHIVAL LIBRARY</span>
+          <h1 class="slide-up in-view" style="font-size: clamp(2.8rem, 5.6vw, 4.9rem); margin-bottom:14px;">
+            Where Every Page Lives Forever.
+          </h1>
+          <p class="slide-up in-view" style="font-family:var(--font-serif); font-style:italic; font-size:1.55rem; color:var(--accent-warm); margin-bottom:16px;">
+            Classic Literature. Iconic Comics. Japanese Manga.
+          </p>
+          <p class="slide-up in-view" style="color:var(--text-muted); font-size:1.02rem; max-width:540px; margin-bottom:30px;">
+            Borrow hardcover classics by Dostoevsky and Orwell, deluxe DC &amp; Marvel graphic novels, Berserk &amp; Vagabond manga, and foundational computer science monographs.
+          </p>
+
+          <div style="display:flex; flex-wrap:wrap; gap:12px;" class="slide-up in-view">
+            <a href="{% url 'library:catalog' %}?genre=all" class="pill-primary-btn" style="padding:14px 26px;">Explore Full Catalog</a>
+            <a href="#comics-section" class="pill-copper-btn" style="padding:14px 26px;">Comics &amp; Manga</a>
+            {% if user.is_authenticated %}
+              <a href="{% url 'library:rare_archives' %}" class="pill-badge-btn" style="padding:13px 22px;">✦ Rare Archives</a>
+            {% else %}
+              <a href="{% url 'accounts:register' %}" class="pill-badge-btn" style="padding:13px 22px;">Get Library Card</a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Editorial Library Reading Hall Showcase Image -->
+        <div class="fade-scale in-view" style="border-radius:30px; overflow:hidden; border:1px solid var(--card-border); background:#231B18; box-shadow:0 34px 80px -20px rgba(74, 37, 37, 0.35);">
+          <div style="position:relative; height:450px; overflow:hidden;">
+            <img
+              src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=90"
+              alt="The Athenaeum Grand Reading Hall"
+              style="width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.7s ease;"
+              onmouseover="this.style.transform='scale(1.04)'"
+              onmouseout="this.style.transform='scale(1)'"
+            />
+          </div>
+          <div style="padding:18px 24px; background:var(--burgundy); color:#FBF7F0; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase;">OVER 20+ CURATED VOLUMES · INSTANT BORROW SLIPS</span>
+            <a href="{% url 'library:catalog' %}?genre=all" style="color:#E8B89A; font-size:0.84rem; font-weight:700;">Browse Shelves →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GENRE WINGS -->
+  <section id="genres" class="section-pad">
+    <div class="container">
+      <div class="editorial-header slide-up">
+        <span class="eyebrow-pill">SIX CURATED WINGS</span>
+        <h2>Browse by Literary Wing</h2>
+        <p>Explore Fiction, Comics &amp; Graphic Novels, Manga, Philosophy, Engineering, and Children’s Classics.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:22px;">
+        {% for g in genres %}
+          <div class="glass-card slide-up" style="overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="height:185px; overflow:hidden; background:#231B18;">
+              <img src="{{ g.cover_url }}" alt="{{ g.name }}" style="width:100%; height:100%; object-fit:cover;" />
+            </div>
+            <div style="padding:22px;">
+              <h3 style="font-size:1.38rem; margin-bottom:8px;">{{ g.name }}</h3>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">{{ g.description|truncatewords:15 }}</p>
+              <a href="{% url 'library:catalog' %}?genre={{ g.slug }}" class="pill-primary-btn">Open Wing →</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- COMICS & MANGA SECTION -->
+  <section id="comics-section" class="section-pad section-alt">
+    <div class="container">
+      <div class="editorial-header slide-up">
+        <span class="eyebrow-pill">SEQUENTIAL ART &amp; DELUXE OMNIBUS</span>
+        <h2>Comics, Graphic Novels &amp; Manga</h2>
+        <p>From Watchmen, Batman: The Dark Knight Returns, and Sandman to Berserk and Vagabond.</p>
+      </div>
+      <div class="book-grid">
+        {% for book in comics_and_manga %}
+          {% include '_book_card.html' with book=book %}
+        {% endfor %}
+      </div>
+      <div style="text-align:center; margin-top:34px;">
+        <a href="{% url 'library:catalog' %}?genre=comics-graphic-novels" class="pill-copper-btn">View All Comics &amp; Graphic Novels →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED LITERATURE -->
+  <section class="section-pad">
+    <div class="container">
+      <div class="editorial-header slide-up">
+        <span class="eyebrow-pill">ESSENTIAL READING</span>
+        <h2>Featured Masterpieces</h2>
+        <p>Enduring works of world literature and speculative fiction ready for checkout.</p>
+      </div>
+      <div class="book-grid">
+        {% for book in featured_books %}
+          {% include '_book_card.html' with book=book %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- SCIENCE, PHILOSOPHY & ENGINEERING -->
+  <section class="section-pad section-alt">
+    <div class="container">
+      <div class="editorial-header slide-up">
+        <span class="eyebrow-pill">SCHOLARLY ARCHIVE</span>
+        <h2>Science, Philosophy &amp; Computer Engineering</h2>
+        <p>From Marcus Aurelius and Stephen Hawking to Clean Code and CLRS Algorithms.</p>
+      </div>
+      <div class="book-grid">
+        {% for book in tech_and_science %}
+          {% include '_book_card.html' with book=book %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- CHILDREN & YOUNG READERS -->
+  <section class="section-pad">
+    <div class="container">
+      <div class="editorial-header slide-up">
+        <span class="eyebrow-pill">JUNIOR READING ROOM</span>
+        <h2>Children &amp; Young Readers</h2>
+        <p>Illustrated editions of The Hobbit, Harry Potter, and Percy Jackson.</p>
+      </div>
+      <div class="book-grid">
+        {% for book in kids_books %}
+          {% include '_book_card.html' with book=book %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

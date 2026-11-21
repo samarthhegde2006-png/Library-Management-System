@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+  <main style="padding: 52px 0 104px;"><div class="container">
+    <div class="glass-card slide-down in-view" style="padding:32px; margin-bottom:28px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:20px;">
+      <div>
+        <span class="eyebrow-pill">DIGITAL LIBRARY CARD · {{ user.member_profile.member_code }}</span>
+        <h1 style="font-size:2.4rem;">{{ user.member_profile.full_name|default:user.username }}</h1>
+        <p style="color:var(--text-muted);">{{ user.email }} · {{ user.member_profile.department_or_grade }}</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a href="{% url 'circulation:track_borrow' %}" class="pill-badge-btn">⌖ Track Borrow Slip</a>
+        <a href="{% url 'library:rare_archives' %}" class="pill-copper-btn">✦ Rare Archives</a>
+      </div>
+    </div>
+
+    <div class="glass-card slide-up in-view" style="padding:28px;">
+      <h2 style="font-size:1.7rem; margin-bottom:16px;">Your Active &amp; Past Borrow Slips</h2>
+      {% for s in slips %}
+        <div style="padding:18px; border-radius:18px; background:rgba(74,37,37,0.06); margin-bottom:12px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <strong>{{ s.slip_number }}</strong> · <span class="eyebrow-pill" style="margin:0;">{{ s.status }}</span>
+            <div style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">Due: <strong>{{ s.due_date|date:"M d, Y" }}</strong> · Books: {% for i in s.items.all %}{{ i.book_title }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="{% url 'circulation:slip_confirmation' s.slip_number %}" class="pill-badge-btn">🧾 Print Slip</a>
+            {% if s.status != 'Returned' %}
+              <form method="post" action="{% url 'circulation:renew_slip' s.slip_number %}">{% csrf_token %}<button type="submit" class="pill-badge-btn">+7d Renew</button></form>
+              <form method="post" action="{% url 'circulation:return_books' s.slip_number %}">{% csrf_token %}<button type="submit" class="pill-primary-btn">Return Books</button></form>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p>No books borrowed yet. <a href="{% url 'library:catalog' %}?genre=all" style="font-weight:700; text-decoration:underline;">Explore the Catalog</a></p>
+      {% endfor %}
+    </div>
+  </div></main>
+{% endblock %}

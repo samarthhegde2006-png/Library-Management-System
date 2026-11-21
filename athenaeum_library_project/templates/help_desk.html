@@ -1,0 +1,2 @@
+{% extends 'base.html' %}
+{% block content %}<main style="padding:64px 0;"><div class="container" style="max-width:680px;"><h1 style="font-size:2.6rem; margin-bottom:16px;">Librarian Help Desk</h1><div class="glass-card" style="padding:30px;"><form method="post" style="display:flex; flex-direction:column; gap:12px;">{% csrf_token %}{{ form.as_p }}<button type="submit" class="pill-primary-btn">Send to Librarian</button></form><script>document.querySelectorAll('form input, form textarea').forEach(e=>e.classList.add('aether-input'));</script></div></div></main>{% endblock %}

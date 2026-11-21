@@ -1,0 +1,65 @@
+<article class="glass-card book-card slide-up">
+  <div>
+    <div class="book-cover-box">
+      <span class="format-badge">{{ book.item_format }}</span>
+      <span class="avail-badge">
+        {% if book.available_copies > 0 %}● {{ book.available_copies }}/{{ book.total_copies }} Available{% else %}● Checked Out{% endif %}
+      </span>
+
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'library:toggle_reading_list' book.id %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="save-heart-btn {% if book.id in saved_book_ids %}saved{% endif %}" title="Save to Reading List">
+            {% if book.id in saved_book_ids %}♥{% else %}♡{% endif %}
+          </button>
+        </form>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="save-heart-btn" title="Sign in to save">♡</a>
+      {% endif %}
+
+      <a href="{% url 'library:book_detail' book.slug %}">
+        <img class="primary-book-img" src="{{ book.get_cover }}" alt="{{ book.title }}" loading="lazy" />
+      </a>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; font-size:0.74rem; color:var(--accent-warm); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">
+      <span>{{ book.author }}</span>
+      <span>★ {{ book.average_rating }}</span>
+    </div>
+
+    <h3 style="font-size:1.28rem; margin-bottom:4px;">
+      <a href="{% url 'library:book_detail' book.slug %}">{{ book.title }}</a>
+    </h3>
+
+    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">
+      {{ book.genre.name }} · {{ book.pages }} pages · {{ book.shelf_location }}
+    </p>
+
+    <!-- Edition Binding Swatches -->
+    <div class="card-swatch-row">
+      {% for ed in book.parsed_editions %}
+        <button type="button" class="swatch-circle {% if forloop.first %}active{% endif %}"
+                style="background:{{ ed.hex }};"
+                title="{{ ed.name }}"
+                onclick="switchBookEdition(this, '{{ ed.img }}', '{{ ed.name }}')"></button>
+      {% endfor %}
+      <span class="active-edition-label" style="font-size:0.74rem; color:var(--text-muted); margin-left:4px;">{{ book.item_format }}</span>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; margin-top:10px;">
+    {% if user.is_authenticated %}
+      {% if book.available_copies > 0 %}
+        <form method="post" action="{% url 'library:add_to_bag' book.id %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="pill-primary-btn" style="width:100%; padding:10px 14px; font-size:0.8rem;">Borrow Book</button>
+        </form>
+      {% else %}
+        <span class="pill-badge-btn" style="opacity:0.55; cursor:not-allowed;">Waitlist</span>
+      {% endif %}
+    {% else %}
+      <a href="{% url 'accounts:login' %}" class="pill-primary-btn" style="padding:10px 14px; font-size:0.8rem;">Sign In to Borrow</a>
+    {% endif %}
+    <a href="{% url 'library:book_detail' book.slug %}" class="pill-badge-btn">Inspect</a>
+  </div>
+</article>

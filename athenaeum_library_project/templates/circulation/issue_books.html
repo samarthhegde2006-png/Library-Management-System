@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Issue Borrow Slip — The Athenaeum{% endblock %}
+{% block content %}
+  <main style="padding: 56px 0 100px;"><div class="container">
+    <h1 style="font-size:2.5rem; margin-bottom:24px;">Issue Library Borrow Slip</h1>
+    <form method="post" style="display:grid; grid-template-columns: 1.3fr 0.9fr; gap:28px;">
+      {% csrf_token %}
+      <div class="glass-card" style="padding:28px; display:flex; flex-direction:column; gap:14px;">
+        <h2 style="font-size:1.5rem;">1. Reader &amp; Dispatch Details</h2>
+        <input type="text" name="member_name" value="{{ user.member_profile.full_name|default:user.username }}" class="aether-input" placeholder="Full Name" required />
+        <input type="email" name="email" value="{{ user.email }}" class="aether-input" placeholder="Email" required />
+        <input type="text" name="phone_number" value="{{ user.member_profile.phone_number }}" class="aether-input" placeholder="Phone Number" required />
+        <textarea name="delivery_address" rows="2" class="aether-textarea" placeholder="Home Address (if requesting courier delivery)"></textarea>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label class="form-label">Loan Duration</label>
+            <select name="loan_days" class="aether-select">
+              <option value="14">14 Days (Standard Loan)</option>
+              <option value="28">28 Days (Extended Scholar Loan)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Reader Voucher (Optional)</label>
+            <input type="text" name="voucher_code" class="aether-input" placeholder="e.g. SCHOLARS28" />
+          </div>
+        </div>
+
+        <label><input type="radio" name="borrow_mode" value="IN_PERSON" checked /> Reading Room &amp; Desk Pickup (Free)</label>
+        <label><input type="radio" name="borrow_mode" value="COURIER_DELIVERY" /> Home Library Courier Dispatch</label>
+      </div>
+
+      <aside class="glass-card" style="padding:28px;">
+        <h2 style="margin-bottom:14px;">Books to Issue ({{ items|length }})</h2>
+        {% for i in items %}
+          <p style="font-size:0.9rem; margin-bottom:8px;">• <strong>{{ i.book.title }}</strong> ({{ i.selected_edition }})</p>
+        {% endfor %}
+        <button type="submit" class="pill-primary-btn" style="width:100%; padding:14px; margin-top:18px;">Confirm &amp; Issue Slip</button>
+      </aside>
+    </form>
+  </div></main>
+{% endblock %}
